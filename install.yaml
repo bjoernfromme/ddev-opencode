@@ -9,17 +9,8 @@ project_files:
 
 post_install_actions:
   - |
-    #ddev-description: Make OpenCode scripts executable and initialize .ddev/.gitignore
+    #ddev-description: Make OpenCode scripts executable
     set -eu
     chmod +x commands/web/opencode opencode/install-opencode.sh
-    if [ ! -f .gitignore ]; then
-      touch .gitignore
-    fi
-    if ! grep -q '^/.opencode/$' .gitignore 2>/dev/null; then
-      printf '\n/.opencode/\n' >> .gitignore
-    fi
-    if ! grep -q '^/opencode/$' .gitignore 2>/dev/null; then
-      printf '/opencode/\n' >> .gitignore
-    fi
 
 ddev_version_constraint: '>= v1.24.3'
