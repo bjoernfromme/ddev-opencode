@@ -10,116 +10,78 @@
 - persists config in `.ddev/.opencode/config/opencode/`
 - persists auth, logs, cache, and runtime data in `.ddev/.opencode/data`
 - persists state in `.ddev/.opencode/state`
-- provides an editable default config template at `.ddev/opencode/default-opencode.json`
+- provides an editable managed default config template at `.ddev/opencode/default-opencode.jsonc`
 
-## Why this layout
+## Managed default config template
 
-This add-on is fully project-local.
+Edit this file:
 
-It does not mount host OpenCode config or data into the container. That means:
+    .ddev/opencode/default-opencode.jsonc
 
-- no dependency on host OpenCode state
-- authentication happens once per project
-- theme, model, and other config changes persist per project
-- host files outside the DDEV project are not exposed by this add-on
+It is a DDEV-managed template file and includes a `#ddev-generated` marker on the first line so `ddev add-on remove` can clean it up with the rest of the add-on-managed files.
 
-## Editable default config
+On every DDEV start, the installer regenerates the runtime config file here:
 
-Before first run, you can edit:
+    .ddev/.opencode/config/opencode/opencode.json
 
-```text
-.ddev/opencode/default-opencode.json
-```
+The first line is stripped during generation so the runtime file becomes valid JSON for OpenCode.
 
-On first startup, the installer copies that file to:
+The shipped template is:
 
-```text
-.ddev/.opencode/config/opencode/opencode.json
-```
+    #ddev-generated
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "permission": {
+        "bash": "ask",
+        "webfetch": "ask",
+        "websearch": "ask"
+      }
+    }
 
-but only if the live config does not already exist.
+## Important behavior
 
-The shipped default template is:
+Because the runtime config is regenerated from the managed template on every start:
 
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "permission": {
-    "bash": "ask",
-    "webfetch": "ask",
-    "websearch": "ask"
-  }
-}
-```
-
-If you later want to re-seed from the template, delete the live config file and restart DDEV.
+- edit `.ddev/opencode/default-opencode.jsonc` if you want persistent default changes
+- do not edit `.ddev/.opencode/config/opencode/opencode.json` directly, because it will be replaced on the next start
 
 ## Install
 
 From a DDEV project root:
 
-```sh
-ddev add-on get /path/to/ddev-opencode
-```
+    ddev add-on get /path/to/ddev-opencode
 
 Then restart:
 
-```sh
-ddev restart
-```
+    ddev restart
 
 ## Usage
 
-Start OpenCode:
+    ddev opencode
 
-```sh
-ddev opencode
-```
+    ddev opencode run "Summarize this repository"
 
-Run a one-shot prompt:
-
-```sh
-ddev opencode run "Summarize this repository"
-```
-
-Show version:
-
-```sh
-ddev opencode --version
-```
+    ddev opencode --version
 
 ## Installed managed files
 
-After installation, these add-on-managed files are placed in `.ddev/`:
+    .ddev/config.opencode.yaml
+    .ddev/docker-compose.opencode.yaml
+    .ddev/commands/web/opencode
+    .ddev/opencode/install-opencode.sh
+    .ddev/opencode/default-opencode.jsonc
 
-```text
-.ddev/config.opencode.yaml
-.ddev/docker-compose.opencode.yaml
-.ddev/commands/web/opencode
-.ddev/opencode/install-opencode.sh
-.ddev/opencode/default-opencode.json
-```
+## Persistent runtime files
 
-Persistent OpenCode runtime state lives here:
+    .ddev/.opencode/
 
-```text
-.ddev/.opencode/
-```
-
-## Persistence behavior
+## Notes
 
 - authenticate once per project
 - auth survives `ddev restart`
 - theme and model selections should survive because config, data, and state are stored in `.ddev/.opencode/`
 - the binary survives `ddev restart` because the wrapper uses the copied persistent binary in `.ddev/.opencode/bin/`
 - updates are handled by OpenCode itself when it starts, via its built-in `autoupdate` behavior
-
-## Notes
-
-- the add-on intentionally separates managed files from runtime state
-- `.ddev/opencode/` contains add-on code and editable defaults
-- `.ddev/.opencode/` contains runtime state and the persisted binary
-- the install script installs only when needed and does not add a separate update timer
 - ignore rules for `.ddev/.opencode/` and `.ddev/opencode/` should be handled in your project's own `.gitignore`
 
 ## macOS / Linux / WSL2

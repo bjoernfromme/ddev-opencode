@@ -11,8 +11,8 @@ PERSIST_STATE_HOME="${PERSIST_BASE}/state"
 PERSIST_BIN="${PERSIST_BIN_DIR}/opencode"
 DEFAULT_INSTALLED_BIN="${HOME:-/home}/.opencode/bin/opencode"
 INSTALLER_URL="https://opencode.ai/install"
-DEFAULT_CONFIG_TEMPLATE="/var/www/html/.ddev/opencode/default-opencode.json"
-LIVE_CONFIG="${PERSIST_APP_CONFIG_DIR}/opencode.json"
+DEFAULT_CONFIG_TEMPLATE="/var/www/html/.ddev/opencode/default-opencode.jsonc"
+GENERATED_CONFIG="${PERSIST_APP_CONFIG_DIR}/opencode.json"
 
 mkdir -p \
   "${PERSIST_BIN_DIR}" \
@@ -20,14 +20,15 @@ mkdir -p \
   "${PERSIST_DATA_HOME}" \
   "${PERSIST_STATE_HOME}"
 
-if [ ! -f "${LIVE_CONFIG}" ] && [ -f "${DEFAULT_CONFIG_TEMPLATE}" ]; then
-  cp "${DEFAULT_CONFIG_TEMPLATE}" "${LIVE_CONFIG}"
+if [ -f "${DEFAULT_CONFIG_TEMPLATE}" ]; then
+  awk 'NR==1 && $0 ~ /^#ddev-generated/ { next } { print }' \
+    "${DEFAULT_CONFIG_TEMPLATE}" > "${GENERATED_CONFIG}"
 fi
 
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${PERSIST_CONFIG_HOME}}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-${PERSIST_DATA_HOME}}"
 export XDG_STATE_HOME="${XDG_STATE_HOME:-${PERSIST_STATE_HOME}}"
-export OPENCODE_CONFIG="${OPENCODE_CONFIG:-${LIVE_CONFIG}}"
+export OPENCODE_CONFIG="${OPENCODE_CONFIG:-${GENERATED_CONFIG}}"
 export PATH="${PERSIST_BIN_DIR}:${HOME:-/home}/.opencode/bin:/home/.opencode/bin:${PATH}"
 
 if [ ! -x "${PERSIST_BIN}" ]; then

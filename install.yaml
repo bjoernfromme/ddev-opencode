@@ -5,7 +5,7 @@ project_files:
   - docker-compose.opencode.yaml
   - commands/web/opencode
   - opencode/install-opencode.sh
-  - opencode/default-opencode.json
+  - opencode/default-opencode.jsonc
 
 post_install_actions:
   - |
