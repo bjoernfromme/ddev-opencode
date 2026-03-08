@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#ddev-generated
+## Description: Run OpenCode inside the web container
+## Usage: opencode
+## Example: "ddev opencode run 'Summarize this repository'"
+set -euo pipefail
+
+INSTALL_SCRIPT="/var/www/html/.ddev/opencode/install-opencode.sh"
+PERSIST_BIN="/var/www/html/.ddev/.opencode/bin/opencode"
+
+if [ ! -x "${PERSIST_BIN}" ]; then
+  "${INSTALL_SCRIPT}" >/dev/null
+fi
+
+exec "${PERSIST_BIN}" "$@"

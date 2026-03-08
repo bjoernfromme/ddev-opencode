@@ -1,0 +1,8 @@
+#ddev-generated
+services:
+  web:
+    environment:
+      XDG_CONFIG_HOME: /var/www/html/.ddev/.opencode/config
+      XDG_DATA_HOME: /var/www/html/.ddev/.opencode/data
+      XDG_STATE_HOME: /var/www/html/.ddev/.opencode/state
+      OPENCODE_CONFIG: /var/www/html/.ddev/.opencode/config/opencode/opencode.json

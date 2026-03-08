@@ -1,0 +1,26 @@
+name: ddev-opencode
+
+project_files:
+  - config.opencode.yaml
+  - docker-compose.opencode.yaml
+  - commands/web/opencode
+  - opencode/install-opencode.sh
+  - opencode/default-opencode.json
+
+post_install_actions:
+  - |
+    #ddev-description: Make OpenCode scripts executable and initialize gitignore
+    set -eu
+    chmod +x commands/web/opencode opencode/install-opencode.sh
+    if [ ! -f ../.gitignore ]; then
+      touch ../.gitignore
+    fi
+    if ! grep -q '^\.ddev/\.opencode/$' ../.gitignore 2>/dev/null; then
+      {
+        printf '\n#ddev-generated\n'
+        printf '# Added by ddev-opencode\n'
+        printf '.ddev/.opencode/\n'
+      } >> ../.gitignore
+    fi
+
+ddev_version_constraint: '>= v1.24.3'
