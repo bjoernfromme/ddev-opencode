@@ -10,7 +10,7 @@
 - persists config in `.ddev/.opencode/config/opencode/`
 - persists auth, logs, cache, and runtime data in `.ddev/.opencode/data`
 - persists state in `.ddev/.opencode/state`
-- adds `.ddev/.opencode/` to the project's `.gitignore`
+- adds ignore rules to `.ddev/.gitignore`
 - provides an editable default config template at `.ddev/opencode/default-opencode.json`
 
 ## Why this layout
@@ -120,6 +120,7 @@ Persistent OpenCode runtime state lives here:
 - the add-on intentionally separates managed files from runtime state
 - `.ddev/opencode/` contains add-on code and editable defaults
 - `.ddev/.opencode/` contains runtime state and the persisted binary
+- `.ddev/.gitignore` is updated to ignore both `/.opencode/` and `/opencode/`
 - the install script installs only when needed and does not add a separate update timer
 
 ## macOS / Linux / WSL2
