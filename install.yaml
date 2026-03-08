@@ -6,7 +6,8 @@ project_files:
   - commands/web/opencode
   - opencode/install-opencode.sh
   - opencode/default-opencode.jsonc
-
+  - .opencode/.gitignore
+  
 post_install_actions:
   - |
     #ddev-description: Make OpenCode scripts executable
