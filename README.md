@@ -1,16 +1,22 @@
 # ddev-opencode
 
-`ddev-opencode` is a DDEV add-on that runs OpenCode inside the DDEV `web` container while keeping all OpenCode runtime state local to each project.
+`ddev-opencode` is a DDEV add-on that runs OpenCode inside the DDEV `web` container while keeping OpenCode runtime state in DDEV’s persistent global cache.
 
 ## What it does
 
 - installs OpenCode after `ddev start`
 - exposes `ddev opencode`
-- persists the OpenCode binary in `.ddev/.opencode/bin/opencode`
-- persists config in `.ddev/.opencode/config/opencode/`
-- persists auth, logs, cache, and runtime data in `.ddev/.opencode/data`
-- persists state in `.ddev/.opencode/state`
+- persists the OpenCode binary in a cache-backed path
+- persists config, auth, logs, cache, and state outside the project tree
 - provides an editable managed default config template at `.ddev/opencode/default-opencode.jsonc`
+
+## Runtime storage
+
+OpenCode runtime state is stored here:
+
+    /mnt/ddev-global-cache/opencode/shared
+
+This gives you one personal OpenCode environment shared across your DDEV projects on the same machine.
 
 ## Managed default config template
 
@@ -18,13 +24,9 @@ Edit this file:
 
     .ddev/opencode/default-opencode.jsonc
 
-It is a DDEV-managed template file and includes a `#ddev-generated` marker on the first line so `ddev add-on remove` can clean it up with the rest of the add-on-managed files.
+On every DDEV start, the installer regenerates (and overwrites) the runtime config from the template here:
 
-On every DDEV start, the installer regenerates the runtime config file here:
-
-    .ddev/.opencode/config/opencode/opencode.json
-
-The first line is stripped during generation so the runtime file becomes valid JSON for OpenCode.
+    /mnt/ddev-global-cache/opencode/shared/config/opencode/opencode.json
 
 The shipped template is:
 
@@ -37,13 +39,6 @@ The shipped template is:
         "websearch": "ask"
       }
     }
-
-## Important behavior
-
-Because the runtime config is regenerated from the managed template on every start:
-
-- edit `.ddev/opencode/default-opencode.jsonc` if you want persistent default changes
-- do not edit `.ddev/.opencode/config/opencode/opencode.json` directly, because it will be replaced on the next start
 
 ## Install
 
@@ -66,23 +61,19 @@ Then restart:
 ## Installed managed files
 
     .ddev/config.opencode.yaml
-    .ddev/docker-compose.opencode.yaml
     .ddev/commands/web/opencode
     .ddev/opencode/install-opencode.sh
     .ddev/opencode/default-opencode.jsonc
 
-## Persistent runtime files
+## Runtime storage
 
-    .ddev/.opencode/
+    /mnt/ddev-global-cache/opencode/shared
 
 ## Notes
 
-- authenticate once per project
-- auth survives `ddev restart`
-- theme and model selections should survive because config, data, and state are stored in `.ddev/.opencode/`
-- the binary survives `ddev restart` because the wrapper uses the copied persistent binary in `.ddev/.opencode/bin/`
+- authenticate once for the shared storage location
+- auth survives `ddev restart` and `ddev poweroff`
 - updates are handled by OpenCode itself when it starts, via its built-in `autoupdate` behavior
-- ignore rules for `.ddev/.opencode/` and `.ddev/opencode/` should be handled in your project's own `.gitignore`
 
 ## macOS / Linux / WSL2
 

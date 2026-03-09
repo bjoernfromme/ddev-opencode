@@ -6,10 +6,15 @@
 set -euo pipefail
 
 INSTALL_SCRIPT="/var/www/html/.ddev/opencode/install-opencode.sh"
-PERSIST_BIN="/var/www/html/.ddev/.opencode/bin/opencode"
+PERSIST_BASE="/mnt/ddev-global-cache/opencode/shared"
+PERSIST_BIN="${PERSIST_BASE}/bin/opencode"
 
-if [ ! -x "${PERSIST_BIN}" ]; then
-  "${INSTALL_SCRIPT}" >/dev/null
-fi
+"${INSTALL_SCRIPT}" >/dev/null
+
+export XDG_CONFIG_HOME="${PERSIST_BASE}/config"
+export XDG_DATA_HOME="${PERSIST_BASE}/data"
+export XDG_STATE_HOME="${PERSIST_BASE}/state"
+export OPENCODE_CONFIG="${PERSIST_BASE}/config/opencode/opencode.json"
+export PATH="${PERSIST_BASE}/bin:${PATH}"
 
 exec "${PERSIST_BIN}" "$@"

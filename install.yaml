@@ -2,16 +2,20 @@ name: ddev-opencode
 
 project_files:
   - config.opencode.yaml
-  - docker-compose.opencode.yaml
   - commands/web/opencode
   - opencode/install-opencode.sh
   - opencode/default-opencode.jsonc
-  - .opencode/.gitignore
-  
+
 post_install_actions:
   - |
     #ddev-description: Make OpenCode scripts executable
     set -eu
     chmod +x commands/web/opencode opencode/install-opencode.sh
 
+removal_actions:
+  - |
+    #ddev-description: Remove empty opencode directory if possible
+    rm -f opencode/install-opencode.sh opencode/default-opencode.jsonc 2>/dev/null || true
+    rmdir opencode 2>/dev/null || true
+    
 ddev_version_constraint: '>= v1.24.3'

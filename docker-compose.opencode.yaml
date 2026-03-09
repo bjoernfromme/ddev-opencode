@@ -1,8 +1,15 @@
 #ddev-generated
 services:
   web:
+    volumes:
+      - type: volume
+        source: opencode
+        target: /mnt/opencode
     environment:
-      XDG_CONFIG_HOME: /var/www/html/.ddev/.opencode/config
-      XDG_DATA_HOME: /var/www/html/.ddev/.opencode/data
-      XDG_STATE_HOME: /var/www/html/.ddev/.opencode/state
-      OPENCODE_CONFIG: /var/www/html/.ddev/.opencode/config/opencode/opencode.json
+      XDG_CONFIG_HOME: /mnt/opencode/config
+      XDG_DATA_HOME: /mnt/opencode/data
+      XDG_STATE_HOME: /mnt/opencode/state
+      OPENCODE_CONFIG: /mnt/opencode/config/opencode/opencode.json
+
+volumes:
+  opencode: {}

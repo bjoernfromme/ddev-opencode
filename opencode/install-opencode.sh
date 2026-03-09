@@ -2,7 +2,7 @@
 #ddev-generated
 set -euo pipefail
 
-PERSIST_BASE="/var/www/html/.ddev/.opencode"
+PERSIST_BASE="/mnt/ddev-global-cache/opencode/shared"
 PERSIST_BIN_DIR="${PERSIST_BASE}/bin"
 PERSIST_CONFIG_HOME="${PERSIST_BASE}/config"
 PERSIST_APP_CONFIG_DIR="${PERSIST_CONFIG_HOME}/opencode"
@@ -25,24 +25,24 @@ if [ -f "${DEFAULT_CONFIG_TEMPLATE}" ]; then
     "${DEFAULT_CONFIG_TEMPLATE}" > "${GENERATED_CONFIG}"
 fi
 
-export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${PERSIST_CONFIG_HOME}}"
-export XDG_DATA_HOME="${XDG_DATA_HOME:-${PERSIST_DATA_HOME}}"
-export XDG_STATE_HOME="${XDG_STATE_HOME:-${PERSIST_STATE_HOME}}"
-export OPENCODE_CONFIG="${OPENCODE_CONFIG:-${GENERATED_CONFIG}}"
+export XDG_CONFIG_HOME="${PERSIST_CONFIG_HOME}"
+export XDG_DATA_HOME="${PERSIST_DATA_HOME}"
+export XDG_STATE_HOME="${PERSIST_STATE_HOME}"
+export OPENCODE_CONFIG="${GENERATED_CONFIG}"
 export PATH="${PERSIST_BIN_DIR}:${HOME:-/home}/.opencode/bin:/home/.opencode/bin:${PATH}"
 
 if [ ! -x "${PERSIST_BIN}" ]; then
-  if [ ! -x "${DEFAULT_INSTALLED_BIN}" ]; then
+  if ! command -v opencode >/dev/null 2>&1; then
     echo "Installing OpenCode ..."
     curl -fsSL "${INSTALLER_URL}" | bash
   fi
 
-  if [ ! -x "${DEFAULT_INSTALLED_BIN}" ]; then
-    echo "OpenCode installer completed but no binary was found at ${DEFAULT_INSTALLED_BIN}" >&2
+  if ! command -v opencode >/dev/null 2>&1; then
+    echo "OpenCode installer completed but no opencode binary was found on PATH." >&2
     exit 1
   fi
 
-  cp "${DEFAULT_INSTALLED_BIN}" "${PERSIST_BIN}"
+  cp "$(command -v opencode)" "${PERSIST_BIN}"
   chmod +x "${PERSIST_BIN}"
 fi
 
