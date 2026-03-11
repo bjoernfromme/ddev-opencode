@@ -2,3 +2,5 @@
 hooks:
   post-start:
     - exec: /var/www/html/.ddev/opencode/install-opencode.sh
+webimage_extra_packages:
+  - ripgrep
