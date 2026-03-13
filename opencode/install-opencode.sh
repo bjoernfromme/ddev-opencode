@@ -12,6 +12,8 @@ PERSIST_BIN="${PERSIST_BIN_DIR}/opencode"
 INSTALLER_URL="https://opencode.ai/install"
 DEFAULT_CONFIG_TEMPLATE="/var/www/html/.ddev/opencode/default-opencode.jsonc"
 GENERATED_CONFIG="${PERSIST_APP_CONFIG_DIR}/opencode.json"
+PRIMARY_UPSTREAM_BIN="${HOME:-/home}/.opencode/bin/opencode"
+FALLBACK_UPSTREAM_BIN="/home/.opencode/bin/opencode"
 FRESH_INSTALL=0
 
 mkdir -p \
@@ -30,6 +32,30 @@ export XDG_DATA_HOME="${PERSIST_DATA_HOME}"
 export XDG_STATE_HOME="${PERSIST_STATE_HOME}"
 export OPENCODE_CONFIG="${GENERATED_CONFIG}"
 export PATH="${PERSIST_BIN_DIR}:${HOME:-/home}/.opencode/bin:/home/.opencode/bin:${PATH}"
+
+sync_persist_binary_from_upstream() {
+  local candidate
+  local persist_version
+  local candidate_version
+
+  [ -x "${PERSIST_BIN}" ] || return 0
+
+  persist_version=$("${PERSIST_BIN}" --version 2>/dev/null || true)
+
+  for candidate in "${PRIMARY_UPSTREAM_BIN}" "${FALLBACK_UPSTREAM_BIN}"; do
+    [ -x "${candidate}" ] || continue
+
+    candidate_version=$("${candidate}" --version 2>/dev/null || true)
+    [ -n "${candidate_version}" ] || continue
+
+    if [ "${candidate_version}" != "${persist_version}" ]; then
+      cp "${candidate}" "${PERSIST_BIN}"
+      chmod +x "${PERSIST_BIN}"
+      echo "Synced OpenCode binary from updater target (${candidate_version})"
+      return 0
+    fi
+  done
+}
 
 # If a persisted binary exists but is not runnable (wrong arch/libc), reinstall it.
 if [ -x "${PERSIST_BIN}" ] && ! "${PERSIST_BIN}" --version >/dev/null 2>&1; then
@@ -53,6 +79,8 @@ if [ ! -x "${PERSIST_BIN}" ]; then
   chmod +x "${PERSIST_BIN}"
 fi
 
+sync_persist_binary_from_upstream
+
 echo "OpenCode version: $("${PERSIST_BIN}" --version)"
 
 if [ "${FRESH_INSTALL}" -eq 1 ]; then
@@ -75,6 +103,7 @@ check_and_upgrade_opencode() {
   "${run_prefix[@]}" "${PERSIST_BIN}" upgrade --method curl </dev/null >/dev/null 2>&1 || upgrade_status=$?
 
   if [ "$upgrade_status" -eq 0 ]; then
+    sync_persist_binary_from_upstream
     new_version=$("${PERSIST_BIN}" --version 2>/dev/null) || new_version="unknown"
     echo "✓ OpenCode version: ${new_version}"
     return 0
