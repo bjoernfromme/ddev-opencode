@@ -74,6 +74,12 @@ Then restart:
 - authenticate once for the shared storage location
 - auth survives `ddev restart` and `ddev poweroff`
 - updates are handled by OpenCode itself when it starts, via its built-in `autoupdate` behavior
+- if you do not want `.ddev/opencode` add-on files to be included in your project's repository, these files/folders should be ignored:
+
+      /.ddev/addon-metadata/ddev-opencode
+      /.ddev/config.opencode.yaml
+      /.ddev/commands/web/opencode
+      /.ddev/opencode/
 
 ## macOS / Linux / WSL2
 
