@@ -78,6 +78,7 @@ Then restart:
 - authenticate once for the shared storage location
 - auth survives `ddev restart` and `ddev poweroff`
 - updates are handled by OpenCode itself using its built-in `autoupdate` behavior
+- on each start, `.gitignore_global` from host `~/.ddev/homeadditions/.gitignore_global` is synced into the shared HOME and `core.excludesfile` is set accordingly
 - if you do not want `.ddev/opencode` add-on files to be included in your project's repository, these files/folders should be ignored:
 
       /.ddev/addon-metadata/ddev-opencode

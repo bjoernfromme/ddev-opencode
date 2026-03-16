@@ -12,6 +12,7 @@ OPENCODE_BIN="${PERSIST_HOME}/.opencode/bin/opencode"
 INSTALLER_URL="https://opencode.ai/install"
 DEFAULT_CONFIG_TEMPLATE="/var/www/html/.ddev/opencode/default-opencode.jsonc"
 GENERATED_CONFIG="${PERSIST_APP_CONFIG_DIR}/opencode.json"
+ORIGINAL_HOME="${HOME:?HOME must be set}"
 
 mkdir -p \
   "${PERSIST_HOME}" \
@@ -24,12 +25,20 @@ if [ -f "${DEFAULT_CONFIG_TEMPLATE}" ]; then
     "${DEFAULT_CONFIG_TEMPLATE}" > "${GENERATED_CONFIG}"
 fi
 
+if [ -f "${ORIGINAL_HOME}/.gitignore_global" ]; then
+  cp -f "${ORIGINAL_HOME}/.gitignore_global" "${PERSIST_HOME}/.gitignore_global"
+fi
+
 export HOME="${PERSIST_HOME}"
 export XDG_CONFIG_HOME="${PERSIST_CONFIG_HOME}"
 export XDG_DATA_HOME="${PERSIST_DATA_HOME}"
 export XDG_STATE_HOME="${PERSIST_STATE_HOME}"
 export OPENCODE_CONFIG="${GENERATED_CONFIG}"
 export PATH="${HOME}/.opencode/bin:${PATH}"
+
+if command -v git >/dev/null 2>&1; then
+  git config --global core.excludesfile "${HOME}/.gitignore_global"
+fi
 
 # If a persisted binary exists but is not runnable (wrong arch/libc), reinstall it.
 if [ -x "${OPENCODE_BIN}" ] && ! "${OPENCODE_BIN}" --version >/dev/null 2>&1; then
