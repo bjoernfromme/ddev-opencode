@@ -6,7 +6,7 @@
 
 - installs OpenCode after `ddev start`
 - exposes `ddev opencode`
-- persists the OpenCode binary in a cache-backed path
+- uses a persistent shared HOME, so OpenCode installs and updates in its native path
 - persists config, auth, logs, cache, and state outside the project tree
 - provides an editable managed default config template at `.ddev/opencode/default-opencode.jsonc`
 
@@ -17,6 +17,10 @@ OpenCode runtime state is stored here:
     /mnt/ddev-global-cache/opencode/shared
 
 This gives you one personal OpenCode environment shared across your DDEV projects on the same machine.
+
+The OpenCode binary is installed and updated here:
+
+    /mnt/ddev-global-cache/opencode/shared/home/.opencode/bin/opencode
 
 ## Managed default config template
 
@@ -73,7 +77,7 @@ Then restart:
 
 - authenticate once for the shared storage location
 - auth survives `ddev restart` and `ddev poweroff`
-- updates are handled by OpenCode itself when it starts, via its built-in `autoupdate` behavior
+- updates are handled by OpenCode itself using its built-in `autoupdate` behavior
 - if you do not want `.ddev/opencode` add-on files to be included in your project's repository, these files/folders should be ignored:
 
       /.ddev/addon-metadata/ddev-opencode

@@ -3,21 +3,18 @@
 set -euo pipefail
 
 PERSIST_BASE="/mnt/ddev-global-cache/opencode/shared"
-PERSIST_BIN_DIR="${PERSIST_BASE}/bin"
+PERSIST_HOME="${PERSIST_BASE}/home"
 PERSIST_CONFIG_HOME="${PERSIST_BASE}/config"
 PERSIST_APP_CONFIG_DIR="${PERSIST_CONFIG_HOME}/opencode"
 PERSIST_DATA_HOME="${PERSIST_BASE}/data"
 PERSIST_STATE_HOME="${PERSIST_BASE}/state"
-PERSIST_BIN="${PERSIST_BIN_DIR}/opencode"
+OPENCODE_BIN="${PERSIST_HOME}/.opencode/bin/opencode"
 INSTALLER_URL="https://opencode.ai/install"
 DEFAULT_CONFIG_TEMPLATE="/var/www/html/.ddev/opencode/default-opencode.jsonc"
 GENERATED_CONFIG="${PERSIST_APP_CONFIG_DIR}/opencode.json"
-PRIMARY_UPSTREAM_BIN="${HOME:-/home}/.opencode/bin/opencode"
-FALLBACK_UPSTREAM_BIN="/home/.opencode/bin/opencode"
-FRESH_INSTALL=0
 
 mkdir -p \
-  "${PERSIST_BIN_DIR}" \
+  "${PERSIST_HOME}" \
   "${PERSIST_APP_CONFIG_DIR}" \
   "${PERSIST_DATA_HOME}" \
   "${PERSIST_STATE_HOME}"
@@ -27,94 +24,27 @@ if [ -f "${DEFAULT_CONFIG_TEMPLATE}" ]; then
     "${DEFAULT_CONFIG_TEMPLATE}" > "${GENERATED_CONFIG}"
 fi
 
+export HOME="${PERSIST_HOME}"
 export XDG_CONFIG_HOME="${PERSIST_CONFIG_HOME}"
 export XDG_DATA_HOME="${PERSIST_DATA_HOME}"
 export XDG_STATE_HOME="${PERSIST_STATE_HOME}"
 export OPENCODE_CONFIG="${GENERATED_CONFIG}"
-export PATH="${PERSIST_BIN_DIR}:${HOME:-/home}/.opencode/bin:/home/.opencode/bin:${PATH}"
-
-sync_persist_binary_from_upstream() {
-  local candidate
-  local persist_version
-  local candidate_version
-
-  [ -x "${PERSIST_BIN}" ] || return 0
-
-  persist_version=$("${PERSIST_BIN}" --version 2>/dev/null || true)
-
-  for candidate in "${PRIMARY_UPSTREAM_BIN}" "${FALLBACK_UPSTREAM_BIN}"; do
-    [ -x "${candidate}" ] || continue
-
-    candidate_version=$("${candidate}" --version 2>/dev/null || true)
-    [ -n "${candidate_version}" ] || continue
-
-    if [ "${candidate_version}" != "${persist_version}" ]; then
-      cp "${candidate}" "${PERSIST_BIN}"
-      chmod +x "${PERSIST_BIN}"
-      echo "Synced OpenCode binary from updater target (${candidate_version})"
-      return 0
-    fi
-  done
-}
+export PATH="${HOME}/.opencode/bin:${PATH}"
 
 # If a persisted binary exists but is not runnable (wrong arch/libc), reinstall it.
-if [ -x "${PERSIST_BIN}" ] && ! "${PERSIST_BIN}" --version >/dev/null 2>&1; then
+if [ -x "${OPENCODE_BIN}" ] && ! "${OPENCODE_BIN}" --version >/dev/null 2>&1; then
   echo "Persisted OpenCode binary is not runnable, reinstalling ..."
-  rm -f "${PERSIST_BIN}"
+  rm -f "${OPENCODE_BIN}"
 fi
 
-if [ ! -x "${PERSIST_BIN}" ]; then
-  FRESH_INSTALL=1
-  if ! command -v opencode >/dev/null 2>&1; then
-    echo "Installing OpenCode ..."
-    curl -fsSL "${INSTALLER_URL}" | bash
-  fi
+if [ ! -x "${OPENCODE_BIN}" ]; then
+  echo "Installing OpenCode ..."
+  curl -fsSL "${INSTALLER_URL}" | bash -s -- --no-modify-path
 
-  if ! command -v opencode >/dev/null 2>&1; then
+  if [ ! -x "${OPENCODE_BIN}" ]; then
     echo "OpenCode installer completed but no opencode binary was found on PATH." >&2
     exit 1
   fi
-
-  cp "$(command -v opencode)" "${PERSIST_BIN}"
-  chmod +x "${PERSIST_BIN}"
 fi
 
-sync_persist_binary_from_upstream
-
-echo "OpenCode version: $("${PERSIST_BIN}" --version)"
-
-if [ "${FRESH_INSTALL}" -eq 1 ]; then
-  exit 0
-fi
-
-check_and_upgrade_opencode() {
-  local new_version
-  local upgrade_status
-  local -a run_prefix=()
-
-  echo "Checking OpenCode update..."
-
-  # Use OpenCode's native updater and force the known install method to avoid prompts.
-  if command -v timeout >/dev/null 2>&1; then
-    run_prefix=(timeout 60s)
-  fi
-
-  upgrade_status=0
-  "${run_prefix[@]}" "${PERSIST_BIN}" upgrade --method curl </dev/null >/dev/null 2>&1 || upgrade_status=$?
-
-  if [ "$upgrade_status" -eq 0 ]; then
-    sync_persist_binary_from_upstream
-    new_version=$("${PERSIST_BIN}" --version 2>/dev/null) || new_version="unknown"
-    echo "✓ OpenCode version: ${new_version}"
-    return 0
-  fi
-
-  if [ "$upgrade_status" -eq 124 ]; then
-    echo "⚠ Warning: OpenCode upgrade check timed out (non-fatal)" >&2
-    return 0
-  fi
-
-  echo "⚠ Warning: OpenCode upgrade check failed (non-fatal)" >&2
-}
-
-check_and_upgrade_opencode
+echo "OpenCode version: $("${OPENCODE_BIN}" --version)"
